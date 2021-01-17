@@ -19,6 +19,7 @@ class _MainPageState extends State<MainPage> {
   _MainPageState() {
     globals.setState = this.setState;
     Setting.loadFromFile().then((obj) {
+      obj.save();
       globals.setting = obj;
       globals.getToken().then((ret) {
         if (!ret)

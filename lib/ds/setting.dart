@@ -30,7 +30,7 @@ class Setting {
     var path = await _getPath();
     if (await FileSystemEntity.isFile(path)) {
       try {
-        var tmp = jsonDecode(File(path).readAsStringSync());
+        var tmp = jsonDecode(await File(path).readAsString());
         for (var e in json.keys) {
           json[e] = tmp[e] ?? json[e];
         }
@@ -41,4 +41,15 @@ class Setting {
   }
 
   Setting(this._uuid);
+
+  toJSON() {
+    return {
+      'uuid': this.uuid
+    };
+  }
+
+  save() async {
+    var path = await _getPath();
+    File(path).writeAsString(jsonEncode(this.toJSON()));
+  }
 }

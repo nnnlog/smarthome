@@ -18,7 +18,7 @@ class _LightControlPage extends State<LightControlPage> {
   RefreshController _refreshController =
       RefreshController(initialRefresh: false);
 
-  bool isLoading = false;
+  bool isLoading = true;
 
   Map<int, Map<String, bool>> light = {};
   Map<int, String> name = {};
@@ -57,11 +57,40 @@ class _LightControlPage extends State<LightControlPage> {
     }
   }
 
+  _changeRoomState(int roomNum, String unit, bool turnOn) async {
+    try {
+      var res = await http
+          .put("${globals.setting.url}/v2/api/features/light/$roomNum/apply",
+              headers: {'access-token': globals.setting.AccessToken},
+              body: jsonEncode(
+                  {"unit": unit, "state": turnOn ? "on" : "off", "name": ""}))
+          .timeout(Duration(seconds: 3), onTimeout: () {
+        return http.Response('timeout', 200);
+      });
+      var json = jsonDecode(res.body);
+      if (json["result"] == "ok") {
+        Map<String, bool> tmp = {};
+        for (var obj in json['units'])
+          tmp[obj['unit']] = (obj['state'] == 'on');
+
+        setState(() {
+          light[roomNum] = tmp;
+        });
+        return true;
+      }
+      throw new Error();
+    } catch (e) {
+      toast("상태 변경에 실패했습니다.\n인터넷 접속을 확인해주세요.");
+      return false;
+    }
+  }
+
   _fetchData() async {
-    if (mounted)
+    if (!isLoading)
       setState(() {
         isLoading = true;
       });
+
     var f = await globals.getFeatures();
     {
       var units = jsonDecode((await http.get(
@@ -119,41 +148,87 @@ class _LightControlPage extends State<LightControlPage> {
         appBar: AppBar(title: Text("조명 제어")),
         body: SmartRefresher(
           controller: _refreshController,
-          child: Padding(
-            padding: EdgeInsets.all(10),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: isLoading
-                  ? [
-                      LinearProgressIndicator(),
-                    ]
-                  : [
-                      Align(
-                        child: Text(
-                          " 거실",
-                          style: TextStyle(fontSize: 32),
-                        ),
-                        alignment: Alignment.centerLeft,
-                      ),
-                      Divider(),
-                      Column(
-                        children: livingroom.entries
-                            .map<SwitchListTile>((e) => SwitchListTile(
-                                  title: Text(e.key.replaceAll("switch", "스위치")),
-                                  value: livingroom[e.key],
-                                  onChanged: (bool value) async {
-                                    if (await _changeLivingRoomState(
-                                        e.key, value))
-                                      setState(() {
-                                        livingroom[e.key] = value;
-                                      });
-                                  },
-                                ))
-                            .toList(),
-                      ),
-                    ],
-            ),
+          child: ListView(
+            children: [
+              Padding(
+                padding: EdgeInsets.all(10),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: isLoading
+                      ? [
+                          Align(
+                            child: LinearProgressIndicator(),
+                          ),
+                        ]
+                      : [
+                          Align(
+                            child: Text(
+                              " 거실",
+                              style: TextStyle(fontSize: 32),
+                            ),
+                            alignment: Alignment.centerLeft,
+                          ),
+                          Divider(),
+                          Column(
+                            children: livingroom.entries
+                                .map<SwitchListTile>((e) => SwitchListTile(
+                                      title: Text(
+                                          e.key.replaceAll("switch", "스위치")),
+                                      value: livingroom[e.key],
+                                      onChanged: (bool value) async {
+                                        if (await _changeLivingRoomState(
+                                            e.key, value))
+                                          setState(() {
+                                            livingroom[e.key] = value;
+                                          });
+                                      },
+                                    ))
+                                .toList(),
+                          ),
+                          Padding(padding: EdgeInsets.all(10)),
+                          Column(
+                            children: light.entries
+                                .map<Column>((e) => Column(
+                                      children: [
+                                            Align(
+                                              child: Text(
+                                                " ${name[e.key]}",
+                                                style: TextStyle(fontSize: 32),
+                                              ),
+                                              alignment: Alignment.centerLeft,
+                                            ),
+                                            Divider(),
+                                          ] +
+                                          light[e.key]
+                                              .entries
+                                              .map<SwitchListTile>((re) =>
+                                                  SwitchListTile(
+                                                    title: Text(re.key
+                                                        .replaceAll(
+                                                            "switch", "스위치")),
+                                                    value: light[e.key][re.key],
+                                                    onChanged:
+                                                        (bool value) async {
+                                                      if (await _changeRoomState(
+                                                          e.key, re.key, value))
+                                                        setState(() {
+                                                          light[e.key][re.key] =
+                                                              value;
+                                                        });
+                                                    },
+                                                  ))
+                                              .toList() +
+                                          [
+                                            Padding(padding: EdgeInsets.all(10))
+                                          ],
+                                    ))
+                                .toList(),
+                          ),
+                        ],
+                ),
+              ),
+            ],
           ),
           onRefresh: _refresh,
           onLoading: _load,

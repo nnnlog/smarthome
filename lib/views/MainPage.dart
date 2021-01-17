@@ -20,10 +20,10 @@ class _MainPageState extends State<MainPage> {
     globals.setState = this.setState;
     Setting.loadFromFile().then((obj) {
       globals.setting = obj;
-      globals.refreshToken().then((ret) {
+      globals.getToken().then((ret) {
         if (!ret)
           Timer.periodic(Duration(seconds: 1), (timer) async {
-            if (await globals.refreshToken()) {
+            if (await globals.getToken()) {
               timer.cancel();
             } else
               setState(() {

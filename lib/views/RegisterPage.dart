@@ -172,7 +172,7 @@ class _RegisterPageState extends State<RegisterPage> {
                                 "Authorization": globals.setting.uuid
                               });
                           if (res.statusCode == 200) {
-                            await globals.refreshToken();
+                            await globals.getToken();
                             Navigator.pop(context);
                           } else {
                             var json = jsonDecode(res.body);

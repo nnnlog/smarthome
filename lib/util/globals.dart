@@ -6,7 +6,30 @@ import 'package:http/http.dart' as http;
 
 Setting setting = Setting("");
 var setState;
-refreshToken() async {
+
+getFeatures() async {
+  try {
+    var res = await http.get(
+      "${setting.url}/v2/api/features/apply",
+      headers: {'access-token': setting.AccessToken},
+    ).timeout(Duration(seconds: 3), onTimeout: () {
+      return http.Response('timeout', 200);
+    });
+    var json = jsonDecode(res.body);
+    if (json["result"] == "ok") {
+      var ret = {};
+      json["features"].forEach((obj) {
+        ret[obj['name']] = obj['quantity'];
+      });
+      return ret;
+    } else throw new Error();
+  } catch (e) {
+
+  }
+  return null;
+}
+
+getToken() async {
   try {
     var res = await http.post(
       "https://center.hdc-smart.com/v3/auth/login",
@@ -14,11 +37,12 @@ refreshToken() async {
     ).timeout(Duration(seconds: 3), onTimeout: () {
       return http.Response('timeout', 200);
     });
-    print(res.body);
     if (res.body == 'timeout') return false;
     var json = jsonDecode(res.body);
     setState(() {
       setting.AccessToken = json['access-token'] ?? '';
+      setting.url = json['url'] ?? '';
+      if (setting.AccessToken != '') getFeatures();
     });
     return true;
   } catch (e) {

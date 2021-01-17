@@ -20,7 +20,7 @@ _getPath() async {
 }
 
 class Setting {
-  String _uuid, AccessToken;
+  String _uuid, url, AccessToken;
   get uuid => _uuid;
 
   static Future<Setting> loadFromFile() async {

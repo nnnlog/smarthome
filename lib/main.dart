@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:smarthome/views/LightControlPage.dart';
 import 'package:smarthome/views/MainPage.dart';
 import 'package:smarthome/views/RegisterPage.dart';
 
@@ -19,7 +20,8 @@ class MyApp extends StatelessWidget {
       initialRoute: '/',
       routes: {
         '/': (context) => MainPage(),
-        '/register/': (context) => RegisterPage()
+        '/register/': (context) => RegisterPage(),
+        '/light/': (context) => LightControlPage(),
       },
       darkTheme: ThemeData.dark(),
     );

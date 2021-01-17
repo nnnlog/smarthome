@@ -1,0 +1,28 @@
+name: smarthome
+description: Rewrite version of SmartHome 2.0
+
+publish_to: 'none'
+
+version: 0.0.1
+
+environment:
+  sdk: ">=2.7.0 <3.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  cupertino_icons: ^1.0.1
+  http: ^0.12.2
+  fluttertoast: ^7.1.6
+  device_info: ^1.0.0
+  path_provider: ^1.6.27
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  integration_test:
+    sdk: flutter
+
+flutter:
+  uses-material-design: true
